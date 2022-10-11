@@ -1,3 +1,7 @@
+import Event from "../events/entities/event.entity";
+import Workshop from "../events/entities/workshop.entity";
+import MenuItem from "./entities/menu-item.entity";
+
 export class MenuItemsService {
 
   /* TODO: complete getMenuItems so that it returns a nested menu structure
@@ -76,6 +80,16 @@ export class MenuItemsService {
   */
 
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    return await Event.findAll({ include: [
+        {
+          model: Workshop,
+          as: 'children',
+          include: [{
+            model: MenuItem,
+            as: 'children'
+          }]
+        }
+      ]
+    });
   }
 }

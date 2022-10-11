@@ -1,4 +1,5 @@
-import { QueryInterface } from 'sequelize';
+import {literal, QueryInterface} from 'sequelize';
+import {ModelAttributes} from "sequelize/types/model";
 
 export default {
   /**
@@ -31,12 +32,239 @@ export default {
    * As a cinema owner I don't want to configure the seating for every show
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  up: (queryInterface: QueryInterface): Promise<void> => {
-    throw new Error('TODO: implement migration in task 4');
+  up: async (queryInterface: QueryInterface): Promise<void> => {
+
+    // users table
+    await queryInterface.createTable('cinema', {
+      id: {
+        type: 'integer',
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: { type: 'varchar' },
+      isAdmin: {type: 'boolean', defaultValue: false},
+      createdAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+      updatedAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+    } as ModelAttributes);
+
+    // cinema table
+    await queryInterface.createTable('cinema', {
+      id: {
+        type: 'integer',
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: { type: 'varchar' },
+      ownerId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'user',
+          },
+          key: 'id',
+        }
+      },
+      createdAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+      updatedAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+    } as ModelAttributes);
+
+    // films
+    await queryInterface.createTable('film', {
+      id: {
+        type: 'integer',
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: { type: 'varchar' },
+      cinemaId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'cinema',
+          },
+          key: 'id',
+        }
+      },
+      createdAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+      updatedAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+    } as ModelAttributes);
+
+    // showroom table
+    await queryInterface.createTable('showroom', {
+      id: {
+        type: 'integer',
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      filmId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'film',
+          },
+          key: 'id',
+        }
+      },
+      cinemaId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'cinema',
+          },
+          key: 'id',
+        }
+      },
+      startAt: {
+        type: 'timestamp'
+      },
+      endAt: {
+        type: 'timestamp'
+      },
+      createdAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+      updatedAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+    } as ModelAttributes);
+
+    // seating
+    await queryInterface.createTable('seating', {
+      id: {
+        type: 'integer',
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      isAvailable: {type: 'boolean', defaultValue: false},
+      cinemaId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'cinema',
+          },
+          key: 'id',
+        },
+        onDelete: 'cascade',
+      },
+      showroomId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'showroom',
+          },
+          key: 'id',
+        },
+        onDelete: 'cascade',
+      },
+      type: {
+        type: 'varchar',
+        defaultValue: 'ordinary'
+      },
+      createdAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+      updatedAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+    } as ModelAttributes);
+
+    // tickets
+    await queryInterface.createTable('tickets', {
+      id: {
+        type: 'integer',
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      pricing: {
+        type: 'float',
+        defaultValue: 0.00
+      },
+      cinemaId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'cinema',
+          },
+          key: 'id',
+        }
+      },
+      showroomId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'showroom',
+          },
+          key: 'id',
+        }
+      },
+      filmId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'film',
+          },
+          key: 'id',
+        },
+      },
+      seatingId: {
+        type: 'integer',
+        allowNull: true,
+        references: {
+          model: {
+            tableName: 'film',
+          },
+          key: 'id',
+        }
+      },
+      createdAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+      updatedAt: {
+        type: 'timestamp',
+        defaultValue: literal('CURRENT_TIMESTAMP'),
+      },
+    } as ModelAttributes);
   },
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  down: (queryInterface: QueryInterface) => {
-    // do nothing
+  down: async (queryInterface: QueryInterface) => {
+    await queryInterface.dropTable('users')
+    await queryInterface.dropTable('cinema')
+    await queryInterface.dropTable('film')
+    await queryInterface.dropTable('showroom')
+    await queryInterface.dropTable('seating')
+    await queryInterface.dropTable('tickets')
   },
 };
